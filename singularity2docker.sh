@@ -21,7 +21,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 set -o errexit
-set -o nounset
+# set -o nounset
 
 usage="USAGE: singularity2docker -n container:new container.simg"
 
@@ -129,8 +129,17 @@ is_installed jq
 
 echo
 echo "2.  Preparing sandbox for export..."
-sandbox=$(mktemp -d -t singularity2docker.XXXXXX)
-rmdir $sandbox
+if [ -n "$SINGULARITY_TMPDIR" ]; then
+    sandbox="$SINGULARITY_TMPDIR"
+fi
+if [ -n "$APPTAINER_TMPDIR" ]; then
+    sandbox="$APPTAINER_TMPDIR"
+fi
+if [ -z "$sandbox" ]; then
+    sandbox=$(mktemp -d -t singularity2docker.XXXXXX)
+fi
+rm -rf $sandbox
+mkdir -p $sandbox
 singularity build --sandbox ${sandbox} ${image}
 
 ################################################################################
